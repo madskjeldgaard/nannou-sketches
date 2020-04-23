@@ -1,4 +1,4 @@
-# sketch-190420
+# squary-shades
 
 This sketch divides the window into a certain amount of squares and then draws those squares
 
