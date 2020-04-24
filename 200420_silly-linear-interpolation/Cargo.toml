@@ -1,5 +1,5 @@
 [package]
-name = "silly-linear-interpolation"
+name = "200420_silly-linear-interpolation"
 version = "0.1.0"
 authors = ["mads kjeldgaard <mail@madskjeldgaard.dk>"]
 edition = "2018"
