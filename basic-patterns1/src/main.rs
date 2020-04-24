@@ -11,6 +11,11 @@ struct Model {
     event: OscEvent,
 }
 
+fn explin(val: f32, inMin: f32, inMax: f32, outMin: f32, outMax: f32) -> f32 {
+    let e = std::f32::EPSILON;
+    (val / inMin).log(e) / (inMax / inMin).log(e) * (outMax - outMin) + outMin
+}
+
 fn model(app: &App) -> Model {
     let port = 1212;
 
@@ -77,7 +82,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
     let draw = app.draw();
     let win = app.window_rect();
 
-    let normed_freq = map_range(model.event.freq, 80.0, 2500.0, 0.0, 1.0);
+    let normed_freq = explin(model.event.freq, 20.0, 20000.0, 0.0, 1.0);
     let radius = model.event.amp * win.h();
 
     let x = map_range(model.event.pan, -1.0, 1.0, win.left(), win.right());
