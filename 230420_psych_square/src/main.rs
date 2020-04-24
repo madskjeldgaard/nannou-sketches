@@ -11,6 +11,7 @@ fn trajectory(start: Point2, end: Point2, steps: i32) -> Vec<Point2> {
 
     vec
 }
+
 fn draw_circles(
     points: Vec<Point2>,
     color: Rgb,
