@@ -12,7 +12,7 @@
 
 			ev[\stream_name] = ev[\stream_name] ?? "stream1";
 			ev[\freq] = ev.use({ ~freq.() });
-			ev[\midinote] = ev.use({ ~midinote.() });
+			ev[\midinote] = ev.use({ ~midinote.().asInteger });
 			ev[\degree] = ev.use({ ~degree.() });
 			ev[\octave] = ev.use({ ~octave.() });
 
@@ -49,7 +49,7 @@
 			Pdef(\sender1),
 			\stream_name, "stream2",
 			\degree, Pwhite(0,10),
-			\octave, 4,
+			\octave, 4.0,
 			\pan, Pwhite(-1.0,1.0),
 			\sendOSC, Pdefn(\send2) 
 		)
