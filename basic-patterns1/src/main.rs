@@ -1,7 +1,7 @@
 use nannou::prelude::*;
 use nannou_osc as osc;
 
-mod oscevent;
+mod scevent;
 
 fn main() {
     nannou::app(model).update(update).simple_window(view).run();
@@ -10,8 +10,8 @@ fn main() {
 struct Model {
     port: u16,
     receiver: osc::Receiver,
-    stream1: oscevent::OscEvent,
-    stream2: oscevent::OscEvent,
+    stream1: scevent::SCEvent,
+    stream2: scevent::SCEvent,
 }
 
 fn model(_app: &App) -> Model {
@@ -20,11 +20,12 @@ fn model(_app: &App) -> Model {
     // Bind an `osc::Receiver` to a port.
     let receiver = osc::receiver(port).unwrap();
 
-    //
-    let stream1 = oscevent::OscEvent::new();
-    let stream2 = oscevent::OscEvent::new().name("stream2".to_string());
+    // Setup two event streams, one on "/stream1"
+    let stream1 = scevent::SCEvent::new().name("stream1".to_string());
 
-    // Create a simple UI to display received messages.
+    // Setup two event streams, one on "/stream2"
+    let stream2 = scevent::SCEvent::new().name("stream2".to_string());
+
     Model {
         port,
         receiver,
@@ -34,32 +35,28 @@ fn model(_app: &App) -> Model {
 }
 
 fn update(_app: &App, model: &mut Model, _update: Update) {
-    let mut news: bool = false;
-
     for (packet, _addr) in model.receiver.try_iter() {
-        let mut sc_event = oscevent::OscEvent::new();
+        // Temporary event
+        let mut tmp_event = scevent::SCEvent::new();
 
-        // println!("{:?}", packet);
+        // Unfold packet into messages
         let messages = packet.into_msgs();
 
-        sc_event.parse_messages(messages);
+        // Parse the incoming event's osc messages and add them to the local event
+        tmp_event.parse_messages(messages);
 
-        match &sc_event.stream_name[..] {
+        // Which stream is it?
+        match &tmp_event.stream_name[..] {
             "stream1" => {
-                model.stream1 = sc_event;
+                println!("New event on stream1: {:?}", &tmp_event);
+                model.stream1 = tmp_event;
             }
             "stream2" => {
-                model.stream2 = sc_event;
+                println!("New event on stream2: {:?}", &tmp_event);
+                model.stream2 = tmp_event;
             }
             _ => (),
         };
-
-        news = true;
-    }
-
-    if news {
-        println!("Stream1 : {:?}", &model.stream1);
-        println!("Stream2 : {:?}", &model.stream2);
     }
 }
 
@@ -68,19 +65,18 @@ fn view(app: &App, model: &Model, frame: Frame) {
     let win = app.window_rect();
 
     // Stream 1
-    let normed_freq = oscevent::explin(model.stream1.freq, 20.0, 20000.0, 0.0, 1.0);
-    let radius = model.stream1.amp * (0.5 * win.h());
-    let x = map_range(model.stream1.pan, -1.0, 1.0, win.left(), win.right());
-    let y = map_range(normed_freq, 0.0, 1.0, win.bottom(), win.top());
-    let p = pt2(x, y);
-    draw.ellipse().xy(p).color(RED).radius(radius);
+    let r1 = model.stream1.amp * (0.5 * win.h());
+    let x1 = map_range(model.stream1.pan, -1.0, 1.0, win.left(), win.right());
+    let y1 = scevent::explin(model.stream1.freq, 20.0, 20000.0, win.bottom(), win.top());
+    let p1 = pt2(x1, y1);
+    draw.ellipse().xy(p1).color(RED).radius(r1);
 
     // Stream 2
-    let x = map_range(model.stream2.pan, -1.0, 1.0, win.left(), win.right());
-    let y = oscevent::explin(model.stream2.freq, 20.0, 20000.0, win.bottom(), win.top());
-    let radius2 = model.stream2.amp * (0.5 * win.h());
-    let p = pt2(x, y);
-    draw.ellipse().xy(p).color(BLUE).radius(radius2);
+    let x2 = map_range(model.stream2.pan, -1.0, 1.0, win.left(), win.right());
+    let y2 = scevent::explin(model.stream2.freq, 20.0, 20000.0, win.bottom(), win.top());
+    let r2 = model.stream2.amp * (0.5 * win.h());
+    let p2 = pt2(x2, y2);
+    draw.ellipse().xy(p2).color(BLUE).radius(r2);
 
     draw.background().color(BLACK);
 
