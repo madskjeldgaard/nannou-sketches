@@ -10,43 +10,56 @@ fn main() {
 struct Model {
     port: u16,
     receiver: osc::Receiver,
-    event: oscevent::OscEvent,
+    stream1: oscevent::OscEvent,
+    stream2: oscevent::OscEvent,
 }
 
-fn explin(val: f32, inMin: f32, inMax: f32, outMin: f32, outMax: f32) -> f32 {
-    let e = std::f32::EPSILON;
-    (val / inMin).log(e) / (inMax / inMin).log(e) * (outMax - outMin) + outMin
-}
-
-fn model(app: &App) -> Model {
-    let port = 1212;
+fn model(_app: &App) -> Model {
+    let port = 1211;
 
     // Bind an `osc::Receiver` to a port.
     let receiver = osc::receiver(port).unwrap();
 
     //
-    let event = oscevent::OscEvent::new();
+    let stream1 = oscevent::OscEvent::new();
+    let stream2 = oscevent::OscEvent::new().name("stream2".to_string());
 
     // Create a simple UI to display received messages.
     Model {
         port,
         receiver,
-        event,
+        stream1,
+        stream2,
     }
 }
 
 fn update(_app: &App, model: &mut Model, _update: Update) {
     let mut news: bool = false;
 
-    for (packet, addr) in model.receiver.try_iter() {
+    for (packet, _addr) in model.receiver.try_iter() {
+        let mut sc_event = oscevent::OscEvent::new();
+
+        // println!("{:?}", packet);
         let messages = packet.into_msgs();
-        model.event.match_sc_addrs(messages);
+
+        sc_event.parse_messages(messages);
+
+        match &sc_event.stream_name[..] {
+            "stream1" => {
+                model.stream1 = sc_event;
+            }
+            "stream2" => {
+                model.stream2 = sc_event;
+            }
+            _ => (),
+        };
 
         news = true;
     }
 
     if news {
-        println!("New event: {:?}", model.event);
+        println!("Stream1 : {:?}", &model.stream1);
+        println!("Stream2 : {:?}", &model.stream2);
     }
 }
 
@@ -54,17 +67,22 @@ fn view(app: &App, model: &Model, frame: Frame) {
     let draw = app.draw();
     let win = app.window_rect();
 
-    let normed_freq = explin(model.event.freq, 20.0, 20000.0, 0.0, 1.0);
-    let radius = model.event.amp * win.h();
-
-    let x = map_range(model.event.pan, -1.0, 1.0, win.left(), win.right());
+    // Stream 1
+    let normed_freq = oscevent::explin(model.stream1.freq, 20.0, 20000.0, 0.0, 1.0);
+    let radius = model.stream1.amp * (0.5 * win.h());
+    let x = map_range(model.stream1.pan, -1.0, 1.0, win.left(), win.right());
     let y = map_range(normed_freq, 0.0, 1.0, win.bottom(), win.top());
     let p = pt2(x, y);
-    let normedmidi = (model.event.midinote as f32 * 2.0 / 128.0) as f32;
-    let c = Rgba::new(normedmidi, 0.5, 0.8, normedmidi);
+    draw.ellipse().xy(p).color(RED).radius(radius);
+
+    // Stream 2
+    let x = map_range(model.stream2.pan, -1.0, 1.0, win.left(), win.right());
+    let y = oscevent::explin(model.stream2.freq, 20.0, 20000.0, win.bottom(), win.top());
+    let radius2 = model.stream2.amp * (0.5 * win.h());
+    let p = pt2(x, y);
+    draw.ellipse().xy(p).color(BLUE).radius(radius2);
 
     draw.background().color(BLACK);
-    draw.ellipse().xy(p).color(c).radius(radius);
 
     draw.to_frame(app, &frame).unwrap();
 }
