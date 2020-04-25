@@ -1,6 +1,8 @@
 use nannou::prelude::*;
 use nannou_osc as osc;
 
+mod oscevent;
+
 fn main() {
     nannou::app(model).update(update).simple_window(view).run();
 }
@@ -8,7 +10,7 @@ fn main() {
 struct Model {
     port: u16,
     receiver: osc::Receiver,
-    event: OscEvent,
+    event: oscevent::OscEvent,
 }
 
 fn explin(val: f32, inMin: f32, inMax: f32, outMin: f32, outMax: f32) -> f32 {
@@ -23,13 +25,7 @@ fn model(app: &App) -> Model {
     let receiver = osc::receiver(port).unwrap();
 
     //
-    let event = OscEvent {
-        amp: 0.25,
-        pan: 0.0,
-        dur: 1.0,
-        degree: 0,
-        freq: 444.0,
-    };
+    let event = oscevent::OscEvent::new();
 
     // Create a simple UI to display received messages.
     Model {
@@ -39,36 +35,12 @@ fn model(app: &App) -> Model {
     }
 }
 
-#[derive(Debug)]
-struct OscEvent {
-    dur: f32,
-    degree: i32,
-    amp: f32,
-    freq: f32,
-    pan: f32,
-}
-
-fn match_sc_addrs(event: &mut OscEvent, messages: Vec<osc::Message>) {
-    for m in messages {
-        for args in m.args.unwrap() {
-            match (&m.addr[..], args) {
-                ("/freq", osc::Type::Float(val)) => event.freq = val,
-                ("/pan", osc::Type::Float(val)) => event.pan = val,
-                ("/dur", osc::Type::Float(val)) => event.dur = val,
-                ("/degree", osc::Type::Int(val)) => event.degree = val,
-                ("/amp", osc::Type::Float(val)) => event.amp = val,
-                _ => (),
-            }
-        }
-    }
-}
-
 fn update(_app: &App, model: &mut Model, _update: Update) {
     let mut news: bool = false;
 
     for (packet, addr) in model.receiver.try_iter() {
         let messages = packet.into_msgs();
-        match_sc_addrs(&mut model.event, messages);
+        model.event.match_sc_addrs(messages);
 
         news = true;
     }
@@ -87,11 +59,12 @@ fn view(app: &App, model: &Model, frame: Frame) {
 
     let x = map_range(model.event.pan, -1.0, 1.0, win.left(), win.right());
     let y = map_range(normed_freq, 0.0, 1.0, win.bottom(), win.top());
-
     let p = pt2(x, y);
+    let normedmidi = (model.event.midinote as f32 * 2.0 / 128.0) as f32;
+    let c = Rgba::new(normedmidi, 0.5, 0.8, normedmidi);
 
     draw.background().color(BLACK);
-    draw.ellipse().xy(p).color(STEELBLUE).radius(radius);
+    draw.ellipse().xy(p).color(c).radius(radius);
 
     draw.to_frame(app, &frame).unwrap();
 }
