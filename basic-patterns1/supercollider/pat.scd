@@ -1,6 +1,8 @@
 (
 	var port = 1211;
 
+	TempoClock.default.tempo=1.5;
+
 	s.waitForBoot{
 		n = NetAddr.new("127.0.0.1", port);
 
@@ -10,7 +12,7 @@
 
 				ev[\stream_name] = ev[\stream_name] ?? "stream1";
 				ev[\freq] = ev.use({ ~freq.() });
-				ev[\midinote] = ev.use({ ~midinote.().asInteger });
+				ev[\midinote] = ev.use({ ~midinote.()});
 				ev[\degree] = ev.use({ ~degree.() });
 				ev[\octave] = ev.use({ ~octave.() });
 
@@ -28,29 +30,49 @@
 
 				ev[\targetAddr].sendBundle(0.0, *arr);
 			})
-		).copy(\send2);	
+		).copy(\send2).copy(\send3);	
 
 		Pdef(\sender1, 
 			Pbind(
 				\stream_name, "stream1",
-				\dur, 0.125,
+				\scale, Scale.whole,
+				\dur, 1/8,
 				\degree, Pwhite(0,10),
 				\targetAddr, n,
-				\pan, Pwhite(-1.0,1.0),
+				\pan, Pwhite(0.0,1.0),
 				\amp, Pwhite(0.25,0.9),
 				\sendOSC, Pdefn(\oscSender) 
 			)
 		).play;
 
 		Pdef(\sender2, 
-			Pbindf(
-				Pdef(\sender1),
+			Pbind(
 				\stream_name, "stream2",
 				\degree, Pwhite(0,10),
+				\scale, Scale.whole,
+				\dur, 1/8,
 				\octave, 4.0,
-				\pan, Pwhite(-1.0,1.0),
+				\targetAddr, n,
+				\pan, Pwhite(-1.0,0.0),
+				\amp, Pwhite(0.25,0.9),
 				\sendOSC, Pdefn(\send2) 
+			)
+		).play;
+
+		Pdef(\sender3, 
+			Pbind(
+				\stream_name, "stream3",
+				\degree, Pwhite(0,10),
+				\scale, Scale.whole,
+				\dur, Pxrand([3.0, 4.0, 2.0],inf),
+				\octave, 3,
+				\pan, Pwhite(-1.0,1.0),
+				\targetAddr, n,
+				\amp, Pwhite(0.25,0.9),
+				\sendOSC, Pdefn(\send3) 
 			)
 		).play;
 	}
 )
+
+Pdef(\sender3).play;
