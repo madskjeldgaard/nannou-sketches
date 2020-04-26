@@ -18,6 +18,8 @@
 			~stream_name = ~stream_name ?? "stream1";
 			~freq = ev.use({ ~freq.() });
 			~midinote = ev.use({ ~midinote.()});
+			~note = ev.use({ ~note.()});
+
 			~degree = ev.use({ ~degree.() });
 			~octave = ev.use({ ~octave.() });
 
