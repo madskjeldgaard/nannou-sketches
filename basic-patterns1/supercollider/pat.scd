@@ -9,8 +9,9 @@
 		// An event type that sends some of the basic parameters (post
 		// calculation) of a normal note event as osc bundles to the NetAddr in
 		// the \targetAddr key
-		Event.addEventType(\noteosc, {|server| var arr; var ev =
-			currentEnvironment;
+		Event.addEventType(\noteosc, {|server| 
+			var arr; 
+			var ev = currentEnvironment;
 
 			~type = \note;
 
