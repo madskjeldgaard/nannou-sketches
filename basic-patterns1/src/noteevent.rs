@@ -1,7 +1,7 @@
 use nannou_osc as osc;
 
 #[derive(Debug)]
-pub struct SCEvent {
+pub struct NoteEvent {
     pub stream_name: String,
 
     pub dur: f32,
@@ -19,9 +19,9 @@ pub struct SCEvent {
 }
 
 // Pattern matching on osc addresses emitted by SuperCollider
-impl SCEvent {
-    pub fn new() -> SCEvent {
-        SCEvent {
+impl NoteEvent {
+    pub fn new() -> NoteEvent {
+        NoteEvent {
             // This is a custom value used to be able to seperate incoming event streams from SC
             stream_name: "stream1".to_string(),
 
@@ -40,7 +40,7 @@ impl SCEvent {
         }
     }
 
-    pub fn name(mut self, name: String) -> SCEvent {
+    pub fn name(mut self, name: String) -> NoteEvent {
         self.stream_name = name;
 
         self
