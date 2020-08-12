@@ -8,3 +8,5 @@ edition = "2018"
 
 [dependencies]
 nannou = "0.14.1" # A Creative Coding Framework for Rust.
+nannou_audio = "0.14.0"       # The audio API for Nannou, the creative coding framework.
+audrey = "0.2.0"        # A crate to simplify reading, writing and converting between a range of audio formats.
